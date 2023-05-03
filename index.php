@@ -34,7 +34,11 @@
             <?= showError('email') ?>
             <input type="text" name="email" id="email" value="<?= getFieldValue('email') ?>">
 
-            <label for="birth_year">Год рождения:</label>
+	           <br />
+			<select name="year" id="year" >
+				<option value="<?= getSelected('year', "") ?>">Выберите год</option>
+			</select>
+			<br />
             <?= showError('birth_year') ?>
             <input type="text" name="birth_year" id="birth_year" value="<?= getFieldValue('birth_year') ?>">
 
@@ -62,6 +66,21 @@
 
             <input type="submit" value="Отправить">
         </form>
+        				<script>
+              const select = document.getElementById('year');
+              const currentYear = new Date().getFullYear();
+              for (let i = currentYear; i >= currentYear - 100; i--) {
+                  const option = document.createElement('option');
+                  option.value = i;
+                  option.text = i;
+                  if(i == <?= isset($_COOKIE['year']) ? $_COOKIE['year'] : '""' ?>) 
+                     {
+                     option.selected = true;
+                     }
+                  select.add(option);
+}
+
+    </script>
     </div>
 </body>
 </html>
