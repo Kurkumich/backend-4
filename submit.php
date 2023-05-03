@@ -16,6 +16,17 @@ function getSelected($fieldName, $value)
     }
     return '';
 }
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+  // Получаем выбранные значения и записываем их в куки-файл
+  if (isset($_POST["powers"])) {
+    $selectedA = implode(',', $_POST["powers"]);
+    setcookie('powers', $selectedA, time() + 3600, '/');
+  }
+}
+if(isset($_POST['year'])) {
+  $selectedYear = $_POST['year'];
+  setcookie('year', $selectedYear, time() + (86400 * 30), "/");
+}
 
 function getChecked($fieldName, $value)
 {
@@ -24,6 +35,15 @@ function getChecked($fieldName, $value)
     }
     return '';
 }
+
+  if (isset($_POST["sex"])) {
+    $value = $_POST["sex"];
+    setcookie('sex', $value, time() + 3600, '/');
+  }
+if (isset($_POST["legs"])) {
+    $value = $_POST["legs"];
+    setcookie('legs', $value, time() + 3600, '/');
+  }
 
 function getFieldValue($fieldName)
 {
@@ -37,9 +57,9 @@ function getFieldValue($fieldName)
 
 // Настройки подключения к базе данных
 $servername = "localhost";
-$username = "u52979";
-$password = "2087021";
-$dbname = "u52979";
+$username = "u52988";
+$password = "4622873";
+$dbname = "u52988";
 
 // Создание подключения
 try {
@@ -55,12 +75,12 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Получение данных из формы
     $name = $_POST["name"];
     $email = $_POST["email"];
-    $birth_year = $_POST["birth_year"];
-    $gender = $_POST["gender"];
-    $limbs = $_POST["limbs"];
-    $abilities = $_POST["abilities"];
+    $year = $_POST["year"];
+    $sex = $_POST["sex"];
+    $legs = $_POST["legs"];
+    $powers = $_POST["powers"];
     $bio = $_POST["bio"];
-    $contract = $_POST["contract"] == "accepted";
+    $agree = $_POST["agree"] == "yes";
 
     // Валидация данных
     $errors = [];
@@ -68,80 +88,74 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     // Валидация полей (проверка на пустоту и корректность)
     if (empty($name)) {
-    $errors[] = "Поле Имя не должно быть пустым.";
+    $errors[] = "Пожалуйста заполните поле Имя";
+'<style>
+    input[id="name"]{
+    border:10px solid red;
+    }
+    </style>';
 }
 
 if (empty($email)) {
-    $errors[] = "Поле E-mail не должно быть пустым.";
+    $errors[] = "Пожалуйста заполните поле E-mail";
 }
 
-if (empty($birth_year)) {
-    $errors[] = "Поле Год рождения не должно быть пустым.";
+if (empty($year)) {
+    $errors[] = "Пожалуйста заполните поле Год рождения";
 }
 
-if (empty($gender)) {
-    $errors[] = "Поле Пол не должно быть пустым.";
-}
-
-if (empty($limbs)) {
-    $errors[] = "Поле Количество конечностей не должно быть пустым.";
-}
 if (!empty($name) && !preg_match("/^[a-zA-Zа-яА-ЯёЁ\s]+$/u", $name)) {
-    $errors[] = "Имя содержит недопустимые символы. Допустимо использовать буквы русского и английского алфавитов";
+    $errors[] = "Поле Имя содержит недопустимые символы. Используйте только буквы русского и английского алфавитов";
 }
  
 if (!empty($email) && (!filter_var($email, FILTER_VALIDATE_EMAIL) || !preg_match("/.*@.*\.ru$/", $email))) {
-    $errors[] = "Неверный формат e-mail.";
+    $errors[] = "Неверный формат e-mail";
 }
 
-if (!empty($birth_year) && (!preg_match("/^(19|20)\d{2}$/", $birth_year) || intval($birth_year) > 2022)) {
-    $errors[] = "Год рождения должен быть в диапазоне от 1900 до 2022.";
+if (!empty($year) && (!preg_match("/^(19|20)\d{2}$/", $year) || intval($year) > 2023)) {
+    $errors[] = "Год рождения должен быть в диапазоне от 1900 до 2023";
 }
-
-if (!empty($limbs) && !preg_match("/^[0-4]$/", $limbs)) {
-    $errors[] = "Количество конечностей должно быть в диапазоне от 0 до 4.";
-}
-if(!$contract){
-  $errors[] = "Пожалуйста ознакомьтесь с правилами.";
+if(!$agree){
+  $errors[] = "Пожалуйста подтвердите ознакомление с соглашением";
 }
 
 $_SESSION['data'] = [
     'name' => $name,
     'email' => $email,
-    'birth_year' => $birth_year,
-    'gender' => $gender,
-    'limbs' => $limbs,
-    'abilities' => $abilities,
+    'year' => $year,
+    'sex' => $sex,
+    'legs' => $legs,
+    'powers' => $powers,
     'bio' => $bio,
-    'contract' => $contract
+    'agree'=>$agree
 ];
     // Сохранение данных, если нет ошибок
     if (empty($errors)) {
         unset($_SESSION['errors']);
 
         try {
-            $stmt = $db->prepare("INSERT INTO users (name, email, birth_year, gender, limbs, bio, contract) VALUES (?, ?, ?, ?, ?, ?, ?)");
-            $stmt->execute([$name, $email, $birth_year, $gender, $limbs, $bio, $contract]);
+            $stmt = $db->prepare("INSERT INTO users (name, email, year, sex, legs, bio, agree) VALUES (?, ?, ?, ?, ?, ?, ?)");
+            $stmt->execute([$name, $email, $year, $sex, $legs, $bio, $agree]);
  
             $user_id = $db->lastInsertId();
  
-            $stmt = $db->prepare("SELECT id FROM abilities WHERE ability_name = ?");
-            foreach ($abilities as $ability) {
-            $stmt->execute([$ability]);
-            $ability_id = $stmt->fetchColumn();
+            $stmt = $db->prepare("SELECT id FROM powers WHERE power_name = ?");
+            foreach ($powers as $power) {
+            $stmt->execute([$power]);
+            $power_id = $stmt->fetchColumn();
  
-            $stmt2 = $db->prepare("INSERT INTO user_abilities (user_id, ability_id) VALUES (?, ?)");
-            $stmt2->execute([$user_id, $ability_id]);
+            $stmt2 = $db->prepare("INSERT INTO user_powers (user_id, power_id) VALUES (?, ?)");
+            $stmt2->execute([$user_id, $power_id]);
             }
             $cookie_expires = time() + 60 * 60 * 24 * 365;
             setcookie('name', $name, $cookie_expires);
             setcookie('email', $email, $cookie_expires);
-            setcookie('birth_year', $birth_year, $cookie_expires);
-            setcookie('gender', $gender, $cookie_expires);
-            setcookie('limbs', $limbs, $cookie_expires);
-            setcookie('abilities', implode(',', $abilities), $cookie_expires);
+            setcookie('year', $year, $cookie_expires);
+            setcookie('sex', $sex, $cookie_expires);
+            setcookie('legs', $legs, $cookie_expires);
+            setcookie('powers', implode(',', $powers), $cookie_expires);
             setcookie('bio', $bio, $cookie_expires);
-            setcookie('contract', $contract, $cookie_expires);
+            setcookie('agree', $agree, $cookie_expires);
             unset($_SESSION['data']);
 
             header("Location: index.php");
